@@ -7,6 +7,20 @@
 
 #### 1.1 MapReduce
 
+##### **最热门商品统计** (./mapreduce/src/main/java/com/hadoop/Top100Item.java )
+
+思路：首先设置一个Job用来对==同一用户同一商品同一行为==进行去重，否则会有正确性风险，统计的热度就可能有问题。由于这个数据是日志不是snapshot，一个用户可能可以重复加购再取消再加购，会产生多条加购记录。当然这个表格里具体是怎么样的是不能确定的，得先确认。之后参照作业五中对shakespear进行wordcount排序的思路进行相似处理即可。三个Job的顺序及功能如下：
+
+- Job1: 读入user_log_format1.csv文件，对 (user_id, item_id, action_type) 进行wordcount，输出格式为 [(user_id, item_id, action_type)	count]
+- Job2: 读入Job1的输出结果，对item_id进行wordcount, 输出格式为 [item_id    count]
+- Job3: SortJob, 读入Job2的结果，交换key-value，进行排序并输出前100名[item_id, count]
+
+最终结果：
+
+<img src="./screenshots/mapreduce-output1.png" alt="image" style="zoom:50%;" />
+
+
+
 #### 1.2 Spark
 
 ##### **最热门商品统计** (./rdd/Top100Item.py)
@@ -27,7 +41,7 @@ itemsDoubleEleven = items.filter(lambda line: line.split(',')[5] == "1111" and l
 
 ##### 1.2.3 对同一用户同一商品同一行为进行去重
 
-首先需要对筛选后的商品进行去重，否则会有正确性风险，统计的热度就可能有问题。由于这个数据是日志不是snapshot。一个用户可能可以重复加购再取消再加购，会产生多条加购记录。当然这个表格里具体是怎么样的是不能确定的，得先确认。
+去重原因同前文
 
 ```python
 UserItemAction = itemsDoubleEleven.map(lambda line: ((line.split(",")[0], line.split(",")[1], line.split(",")[6]), 1))
@@ -342,7 +356,7 @@ predict_test.show(10)
 
 
 
-#### 4.5 得到回头课测试集的最终预测结果
+#### 4.5 得到回头客测试集的最终预测结果
 
 <img src="./screenshots/predict_test.png" alt="image" style="zoom:50%;" />
 
