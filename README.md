@@ -1,6 +1,9 @@
 # 天猫复购预测-FBDP实验四报告
 <p align="right">181098273 王天诚</p>
 
+- 完整代码及输出结果请见项目地址：https://github.com/johnwang1126/tianchi-tmall-experiment
+- 数据来源：https://tianchi.aliyun.com/competition/entrance/231576/information 本地运行自行下载数据即可
+
 ## 实验内容
 
 ### 1.统计==双十一最热门商品== 和==最受年轻人关注的商家==：
@@ -15,9 +18,34 @@
 - Job2: 读入Job1的输出结果，对item_id进行wordcount, 输出格式为 [item_id    count]
 - Job3: SortJob, 读入Job2的结果，交换key-value，进行排序并输出前100名[item_id, count]
 
-最终结果：
+**最终结果**：
 
 <img src="./screenshots/mapreduce-output1.png" alt="image" style="zoom:50%;" />
+
+
+
+##### **最受年轻人关注商家统计** (./mapreduce/src/main/java/com/hadoop/Top100Merchant.java )
+
+思路：参照作业五shakespear文件处理中对于==停词==的处理方式，在上一问的基础之上读入user_info_format1.csv文件，==筛选出所有年轻人集合作为“停词”==以供第一个map进行筛选。
+
+```java
+private Set<String> userYouth = new HashSet<String>();
+...
+		String[] split = line.split(",");
+    if(split[1].equals("1") || split[1].equals("2") || split[1].equals("3")){
+    userYouth.add(split[0]);
+    }
+```
+
+后面的部分与前一问完全相同（包括去重、wordcount、以及排序），因此依旧是三个Job，他们的顺序及功能如下：
+
+- Job1: 首先用URI的形式传入user_info_format1.csv，将年龄<30的useer_id存入一个集合中。之后读入user_log_format1.csv文件，对 (user_id, item_id, merchan_id, action_type) 进行wordcount，输出格式为 [(user_id, item_id, action_type)	count] 
+- Job2: 读入Job1的输出结果，对item_id进行wordcount, 输出格式为 [merchant_id    count]
+- Job3: SortJob, 读入Job2的结果，交换key-value，进行排序并输出前100名[merchant_id, count]
+
+**最终结果**：
+
+<img src="./screenshots/mapreduct-output2.png" alt="image" style="zoom:50%;" />
 
 
 
